@@ -10,6 +10,7 @@ import Combine
 
 protocol InstallationDaysProviderable {
     var value: AnyPublisher<Int, Error> { get }
+    var isLastDayWarning: AnyPublisher<Bool, Error> { get }
 }
 
 protocol InstallationDaysManagerable: InstallationDaysProviderable {
@@ -20,6 +21,7 @@ protocol InstallationDaysManagerable: InstallationDaysProviderable {
 final class InstallationDaysManager: InstallationDaysManagerable {
     private enum Constants {
         static let daysStorageKey = "installation_days"
+        static let maxInstallationDays = 3
     }
     
     enum InstallationDaysError: Error {
@@ -32,6 +34,12 @@ final class InstallationDaysManager: InstallationDaysManagerable {
     
     var value: AnyPublisher<Int, Error> {
         return valueInternal
+            .eraseToAnyPublisher()
+    }
+    
+    var isLastDayWarning: AnyPublisher<Bool, Error> {
+        valueInternal
+            .map { $0 >= Constants.maxInstallationDays }
             .eraseToAnyPublisher()
     }
     

@@ -62,7 +62,7 @@ final class GameViewModel: GameViewModelable {
             .prefix(1)
             .sink { completion in
                 if case .failure(let error) = completion {
-                    print("Receiving gift value failed with error: ", error.localizedDescription)
+                    print("Game screen: Receiving gift value failed with error: ", error.localizedDescription)
                 }
             } receiveValue: { [weak self] gift in
                 self?.processGift(gift)
@@ -89,20 +89,16 @@ private extension GameViewModel {
     }
     
     func configure() {
-        let isLastDayPublisher = installationDaysProvider
-            .value
-            .map { $0 > 2 }
-        
-        Publishers.CombineLatest(isLastDayPublisher, declineInternal)
+        Publishers.CombineLatest(installationDaysProvider.isLastDayWarning, declineInternal)
             .receive(on: DispatchQueue.main)
             .sink { completion in
                 if case .failure(let error) = completion {
-                    print("Receiving last installation day value failed with error: ", error.localizedDescription)
+                    print("Game screen: Receiving last installation day value failed with error: ", error.localizedDescription)
                 }
             } receiveValue: { [weak self] result in
-                let (isLastDay, _) = result
+                let (isLastDayWarning, _) = result
                 
-                guard isLastDay else {
+                guard isLastDayWarning else {
                     self?.coordinator?.dismiss()
                     return
                 }

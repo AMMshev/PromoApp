@@ -17,17 +17,9 @@ protocol HomeViewModelable: ObservableObject {
 }
 
 final class HomeViewModel: HomeViewModelable {
-    private enum Constants {
-        static let maxInstallationDays = 3
-    }
     
-    @Published private(set) var installationDay: Int = 0 {
-        didSet {
-            startDayIsHidden = installationDay >= Constants.maxInstallationDays
-        }
-    }
-    
-    @Published var startDayIsHidden: Bool = false
+    @Published private(set) var installationDay: Int = 0
+    @Published private(set) var startDayIsHidden: Bool = false
     
     private weak var coordinator: Coordinator?
     private var cancellables: Set<AnyCancellable> = []
@@ -65,6 +57,14 @@ private extension HomeViewModel {
                 }
             } receiveValue: { [weak self] value in
                 self?.installationDay = value
+            }
+            .store(in: &cancellables)
+        
+        installationDaysManager
+            .isLastDayWarning
+            .receive(on: DispatchQueue.main)
+            .sink { _ in } receiveValue: { [weak self] isLastDayWarning in
+                self?.startDayIsHidden = isLastDayWarning
             }
             .store(in: &cancellables)
     }
